@@ -22,29 +22,29 @@ object EsQueryApp extends App {
   }
 
   val query = boolQuery()
-  val nestedMust1 = boolQuery()
-    .must(nestedQuery("languages", termQuery("languages.id", "1"), ScoreMode.None))
-    .must(nestedQuery("languages", rangeQuery("languages.level").gte(0), ScoreMode.None))
 
-  val nestedMust2 = boolQuery()
-    .must(nestedQuery("languages", termQuery("languages.id", "3"), ScoreMode.None))
-    .must(nestedQuery("languages", rangeQuery("languages.level").gte(0), ScoreMode.None))
+  val firstClause =
+    boolQuery()
+      .must(termQuery("languages.id", "1"))
+      .must(rangeQuery("languages.level").gte(0))
+
+  val secondClause =
+    boolQuery()
+      .must(termQuery("languages.id", "3"))
+      .must(rangeQuery("languages.level").gte(0))
+
+  val nestedMust = boolQuery()
+    .must(nestedQuery("languages", firstClause, ScoreMode.None))
+    .must(nestedQuery("languages", secondClause, ScoreMode.None))
+
 
   query
-    .filter(
-      boolQuery()
-        .must(nestedMust1)
-        .must(nestedMust2)
-
-    )
+    .filter(nestedMust)
 
 
   val esQueryApi = new EsQueryApi(client)
   val count = esQueryApi.getCount(indexName, query)
   println(count)
-
-
-
 
 
 }
